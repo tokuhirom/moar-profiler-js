@@ -1,0 +1,16 @@
+{
+  "name": "moar-profiler-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "profile.js",
+  "dependencies": {
+    "lodash": "^3.10.1",
+    "sprintf": "^0.1.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
