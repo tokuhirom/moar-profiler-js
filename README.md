@@ -1,4 +1,4 @@
-# Analyzie MoarVM's profiler output on CLI.
+# Analyze MoarVM's profiler output on CLI.
 
 nqp+MoarVM outputs profiler result as HTML. But hard to see on web browser. It's browser crasher.
 The html contains JSON and angularjs based code.
