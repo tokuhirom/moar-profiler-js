@@ -120,6 +120,7 @@ MoarProfiler.prototype.routines = function ($scope) {
     var idToInclusive    = {};
     var idToOSR          = {};
     var idRecDepth       = {};
+    var idToCallers      = {};
     var totalExclusive   = 0;
     var totalInclusive   = rawData[0].call_graph.inclusive_time;
     function walkCallGraphNode(node) {
@@ -143,6 +144,12 @@ MoarProfiler.prototype.routines = function ($scope) {
             idToInclusive[node.id] += node.inclusive_time;
         if (node.callees) {
             idRecDepth[node.id]++;
+            node.callees.map(callee => {
+                if (!idToCallers[callee.id]) {
+                    idToCallers[callee.id] = {};
+                }
+                idToCallers[callee.id][node.id] = 1;
+            });
             node.callees.map(walkCallGraphNode);
             idRecDepth[node.id]--;
         }
@@ -167,7 +174,8 @@ MoarProfiler.prototype.routines = function ($scope) {
             InclusiveTimePercent: +(100 * idToInclusive[id] / totalInclusive).toFixed(2),
             ExclusiveTime:        +(idToExclusive[id] / 1000).toFixed(2),
             ExclusiveTimePercent: +(100 * idToExclusive[id] / totalExclusive).toFixed(2),
-            OSR:                  idToOSR[id]
+            OSR:                  idToOSR[id],
+            Callers:              Object.keys(idToCallers[id] || {})
         };
         routineList.push(entry);
     }
@@ -521,20 +529,28 @@ cli.prototype.show_routines = function () {
 
     console.log("\n\n================> Routines(Order by Inclusive) <====================\n");
     _.sortBy(scope.Routines, v => v.InclusiveTime).reverse().slice(0, 20).forEach((r, i) => {
-        console.log(sprintf("%3d %4d(%7s) %4d(%7s) %s %s %s", i,
+        console.log(sprintf("%3d %4d(%7s) %4d(%7s) %s %s %s %s", i,
                             r.InclusiveTime, percentage(r.InclusiveTimePercent),
                             r.ExclusiveTime, percentage(r.ExclusiveTimePercent),
+                            r.Entries,
                             r.Name, r.File, r.Line
                             ));
     });
 
     console.log("\n\n================> Routines(Order by Exclusive) <====================\n");
     _.sortBy(scope.Routines, v => v.ExclusiveTime).reverse().slice(0, 20).forEach((r, i) => {
-        console.log(sprintf("%3d %4d(%7s) %4d(%7s) %s %s %s", i,
+        console.log(sprintf("%3d %4d(%7s) %4d(%7s) %8d %s %s %s", i,
                             r.InclusiveTime, percentage(r.InclusiveTimePercent),
                             r.ExclusiveTime, percentage(r.ExclusiveTimePercent),
+                            r.Entries,
                             r.Name, r.File, r.Line
                             ));
+        r.Callers.forEach((id, i) => {
+            console.log("\t%s %s at %s",
+                        this.profiler.nodeIdToName[id],
+                        this.profiler.nodeIdToFile[id],
+                        this.profiler.nodeIdToLine[id]);
+        });
     });
 };
 
